@@ -71,13 +71,17 @@ END;
 -- =====================================================================
 DECLARE
   v_id_reserva NUMBER;
+  v_id_cliente NUMBER;
+  v_id_hab     NUMBER;
 BEGIN
+  SELECT id_cliente INTO v_id_cliente FROM (SELECT id_cliente FROM cliente ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM = 1;
+  SELECT id_habitacion INTO v_id_hab FROM (SELECT id_habitacion FROM habitacion ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM = 1;
+
   pkg_reservas.sp_crear_reserva(
-    p_id_cliente   => (SELECT id_cliente FROM (SELECT id_cliente FROM cliente ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM = 1),
+    p_id_cliente   => v_id_cliente,
     p_checkin      => DATE '2026-05-10',
     p_checkout     => DATE '2026-05-10',
-    p_habitaciones => ty_tab_habitaciones(ty_item_habitacion(
-                         (SELECT id_habitacion FROM (SELECT id_habitacion FROM habitacion ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM = 1), 1)),
+    p_habitaciones => ty_tab_habitaciones(ty_item_habitacion(v_id_hab, 1)),
     p_id_reserva   => v_id_reserva
   );
   DBMS_OUTPUT.PUT_LINE('PRUEBA 2 FALLÓ: no debía dejar crear la reserva');
@@ -98,12 +102,14 @@ DECLARE
   v_id_reserva NUMBER;
   v_id_hab     NUMBER;
   v_capacidad  NUMBER;
+  v_id_cliente NUMBER;
 BEGIN
   SELECT id_habitacion, capacidad INTO v_id_hab, v_capacidad
   FROM (SELECT id_habitacion, capacidad FROM habitacion ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM = 1;
+  SELECT id_cliente INTO v_id_cliente FROM (SELECT id_cliente FROM cliente ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM = 1;
 
   pkg_reservas.sp_crear_reserva(
-    p_id_cliente   => (SELECT id_cliente FROM (SELECT id_cliente FROM cliente ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM = 1),
+    p_id_cliente   => v_id_cliente,
     p_checkin      => DATE '2026-05-10',
     p_checkout     => DATE '2026-05-12',
     p_habitaciones => ty_tab_habitaciones(ty_item_habitacion(v_id_hab, v_capacidad + 5)),
@@ -129,6 +135,8 @@ DECLARE
   v_id_reserva_a NUMBER;
   v_id_reserva_b NUMBER;
   v_id_hab       NUMBER;
+  v_id_cliente_a NUMBER;
+  v_id_cliente_b NUMBER;
   v_checkin      DATE := DATE '2026-06-01';
   v_checkout     DATE := DATE '2026-06-10';
 BEGIN
@@ -141,9 +149,11 @@ BEGIN
     )
     ORDER BY DBMS_RANDOM.VALUE
   ) WHERE ROWNUM = 1;
+  SELECT id_cliente INTO v_id_cliente_a FROM (SELECT id_cliente FROM cliente ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM = 1;
+  SELECT id_cliente INTO v_id_cliente_b FROM (SELECT id_cliente FROM cliente ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM = 1;
 
   pkg_reservas.sp_crear_reserva(
-    p_id_cliente   => (SELECT id_cliente FROM (SELECT id_cliente FROM cliente ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM = 1),
+    p_id_cliente   => v_id_cliente_a,
     p_checkin      => v_checkin,
     p_checkout     => v_checkout,
     p_habitaciones => ty_tab_habitaciones(ty_item_habitacion(v_id_hab, 1)),
@@ -153,7 +163,7 @@ BEGIN
 
   BEGIN
     pkg_reservas.sp_crear_reserva(
-      p_id_cliente   => (SELECT id_cliente FROM (SELECT id_cliente FROM cliente ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM = 1),
+      p_id_cliente   => v_id_cliente_b,
       p_checkin      => DATE '2026-06-05', -- se cruza con la reserva A
       p_checkout     => DATE '2026-06-12',
       p_habitaciones => ty_tab_habitaciones(ty_item_habitacion(v_id_hab, 1)),
@@ -234,6 +244,7 @@ END;
 DECLARE
   v_id_temporada NUMBER;
   v_antes        NUMBER;
+  v_despues      NUMBER;
 BEGIN
   SELECT id_temporada INTO v_id_temporada FROM (SELECT id_temporada FROM temporada ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM = 1;
   SELECT COUNT(*) INTO v_antes FROM auditoria_tarifa;
@@ -243,8 +254,8 @@ BEGIN
 
   COMMIT;
 
-  DBMS_OUTPUT.PUT_LINE('Filas nuevas en auditoria_tarifa: ' ||
-    (SELECT COUNT(*) FROM auditoria_tarifa) - v_antes);
+  SELECT COUNT(*) INTO v_despues FROM auditoria_tarifa;
+  DBMS_OUTPUT.PUT_LINE('Filas nuevas en auditoria_tarifa: ' || (v_despues - v_antes));
 END;
 /
 
