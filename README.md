@@ -36,11 +36,32 @@ sqlplus turismouq@//localhost:1521/XEPDB1 @04_plsql/02_tabla_auditoria.sql
 sqlplus turismouq@//localhost:1521/XEPDB1 @04_plsql/03_package_reservas.sql
 sqlplus turismouq@//localhost:1521/XEPDB1 @04_plsql/04_triggers.sql
 sqlplus turismouq@//localhost:1521/XEPDB1 @04_plsql/05_pruebas.sql
+
+# 4) Entrega 3 — transacciones
+sqlplus turismouq@//localhost:1521/XEPDB1 @05_transacciones/01_pkg_transacciones.sql
+sqlplus turismouq@//localhost:1521/XEPDB1 @05_transacciones/02_pruebas_transacciones.sql
+
+# 5) Entrega 3 — concurrencia (requiere DOS ventanas/worksheets abiertas a la vez)
+sqlplus turismouq@//localhost:1521/XEPDB1 @06_concurrencia/01_pkg_demo_concurrencia.sql
+# luego, en ventana A: 02_sesionA_sin_lock.sql | en ventana B (mientras A espera): 03_sesionB_sin_lock.sql
+# después, en ventana A: 04_sesionA_con_lock.sql | en ventana B (mientras A espera): 05_sesionB_con_lock.sql
+# y para revisar cada experimento: 06_verificar.sql
+
+# 6) Entrega 3 — índices
+sqlplus turismouq@//localhost:1521/XEPDB1 @07_indices/01_indices.sql
+
+# 7) Entrega 3 — seguridad (el primer script va como SYSTEM, el resto como turismouq)
+sqlplus system/<tu_clave_system>@//localhost:1521/XEPDB1 @08_seguridad/01_roles_usuarios_profile.sql
+sqlplus turismouq@//localhost:1521/XEPDB1 @08_seguridad/02_vistas_recepcion.sql
+sqlplus turismouq@//localhost:1521/XEPDB1 @08_seguridad/03_permisos_por_rol.sql
+sqlplus turismouq@//localhost:1521/XEPDB1 @08_seguridad/04_pruebas_seguridad.sql
 ```
 
 `02_clientes_reservas.sql` genera 25.000 reservas con su lógica de tarifas/pagos/servicios; puede tardar varios minutos. Va mostrando avance cada 1.000 reservas.
 
 `05_pruebas.sql` es el script de demostración para la sustentación: crea reservas válidas e inválidas para mostrar cada excepción (`ORA-20001`..`ORA-20004`), dispara el trigger anti-solape con un INSERT directo, dispara la auditoría de tarifas con un UPDATE masivo, y corre la liquidación mensual.
+
+El experimento de concurrencia (`06_concurrencia/`) necesita **dos ventanas de SQL Developer abiertas al mismo tiempo, ambas conectadas a TurismoUQ** — una hace de "Sesión A" y otra de "Sesión B". Cada script de sesión explica en sus comentarios cuándo correr el otro.
 
 **Cambia la clave `<clave_turismouq>`** por una propia antes de usar esto en serio (queda en texto plano en `01_tablespace_y_usuario.sql`, solo apta para ambiente local de desarrollo).
 
@@ -58,19 +79,36 @@ TurismoUQ/
 │   └── 02_clientes_reservas.sql # 3.000 clientes, 25.000 reservas, pagos, servicios, reseñas
 ├── 03_consultas_analisis/
 │   └── 01_consultas.sql         # Las 8 consultas obligatorias de la Entrega 1
-└── 04_plsql/
-    ├── 01_tipos.sql             # Tipos SQL para pasar listas de habitaciones a sp_crear_reserva
-    ├── 02_tabla_auditoria.sql   # Tabla donde el trigger de auditoría registra cambios de TARIFA
-    ├── 03_package_reservas.sql  # pkg_reservas: fn_valor_estadia, sp_crear_reserva, sp_liquidacion_mensual
-    ├── 04_triggers.sql          # Trigger de sentencia (auditoría) y de fila (anti-solape)
-    └── 05_pruebas.sql           # Script de demo/sustentación con los 7 casos de prueba
+├── 04_plsql/
+│   ├── 01_tipos.sql             # Tipos SQL para pasar listas de habitaciones a sp_crear_reserva
+│   ├── 02_tabla_auditoria.sql   # Tabla donde el trigger de auditoría registra cambios de TARIFA
+│   ├── 03_package_reservas.sql  # pkg_reservas: fn_valor_estadia, sp_crear_reserva, sp_liquidacion_mensual
+│   ├── 04_triggers.sql          # Trigger de sentencia (auditoría) y de fila (anti-solape)
+│   └── 05_pruebas.sql           # Script de demo/sustentación con los 7 casos de prueba
+├── 05_transacciones/
+│   ├── 01_pkg_transacciones.sql # sp_registrar_reserva_pago: reserva + pago atómico con SAVEPOINT
+│   └── 02_pruebas_transacciones.sql # Pago exitoso vs. rollback parcial por pago insuficiente
+├── 06_concurrencia/
+│   ├── 01_pkg_demo_concurrencia.sql # sp_reservar_sin_lock / sp_reservar_con_lock
+│   ├── 02_sesionA_sin_lock.sql  # Experimento SIN bloqueo (reproduce doble reserva)
+│   ├── 03_sesionB_sin_lock.sql
+│   ├── 04_sesionA_con_lock.sql  # Mismo experimento CON SELECT...FOR UPDATE (corrige el problema)
+│   ├── 05_sesionB_con_lock.sql
+│   └── 06_verificar.sql         # Confirma si hubo o no doble reserva
+├── 07_indices/
+│   └── 01_indices.sql           # 3 consultas lentas + índices (1 compuesto, 1 función) + 1 caso donde no ayuda
+└── 08_seguridad/
+    ├── 01_roles_usuarios_profile.sql # 4 roles, PROFILE y usuarios demo (conectado como SYSTEM)
+    ├── 02_vistas_recepcion.sql       # Vistas por las que opera recepción
+    ├── 03_permisos_por_rol.sql       # GRANTs diferenciados por rol
+    └── 04_pruebas_seguridad.sql      # Demo: qué puede y qué no puede hacer cada rol
 ```
 
 ## Estado del proyecto
 
 - [x] Entrega 1 — Modelo, DDL, carga de datos, 8 consultas de análisis
 - [x] Entrega 2 — Capa PL/SQL (`fn_valor_estadia`, `sp_crear_reserva`, cursor, paquete, triggers)
-- [ ] Entrega 3 — Transacciones, índices y seguridad
+- [x] Entrega 3 — Transacciones, índices y seguridad
 - [ ] Sustentación
 
 ## Nota sobre alcance
