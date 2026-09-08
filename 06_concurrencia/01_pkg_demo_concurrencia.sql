@@ -64,10 +64,15 @@ CREATE OR REPLACE PACKAGE BODY pkg_demo_concurrencia AS
         'Habitación ' || p_id_habitacion || ' no disponible (detectado en el chequeo, sin bloqueo).');
     END IF;
 
-    DBMS_OUTPUT.PUT_LINE('[sin_lock] Chequeo OK. Esperando ' || p_espera_seg ||
-                          's antes de insertar — corre la otra sesión AHORA.');
-    DBMS_SESSION.SLEEP(p_espera_seg);
-
+    -- OJO: el trigger trg_no_solape_reserva vuelve a chequear solapamiento
+    -- justo en este INSERT, así que el chequeo de arriba no alcanza a
+    -- proteger nada por sí solo. La condición de carrera real no está
+    -- entre "chequear" e "insertar" (el trigger ya cubre eso), sino entre
+    -- "insertar" (ya pasó el trigger, pero SIN COMMIT todavía) y
+    -- "confirmar" (COMMIT): mientras esta fila exista sin commit, OTRA
+    -- sesión no la ve (READ COMMITTED) y su propio INSERT/trigger también
+    -- pasa sin problema — ahí es donde se cuela la doble reserva. Por eso
+    -- la pausa va DESPUÉS de insertar y ANTES de hacer COMMIT.
     INSERT INTO reserva (id_cliente, fecha_checkin, fecha_checkout, estado, valor_total)
     VALUES (p_id_cliente, p_checkin, p_checkout, 'CONFIRMADA', 0)
     RETURNING id_reserva INTO p_id_reserva;
@@ -78,6 +83,11 @@ CREATE OR REPLACE PACKAGE BODY pkg_demo_concurrencia AS
     VALUES (p_id_reserva, p_id_habitacion, 1, v_valor);
 
     UPDATE reserva SET valor_total = v_valor WHERE id_reserva = p_id_reserva;
+
+    DBMS_OUTPUT.PUT_LINE('[sin_lock] Insertado (reserva ' || p_id_reserva ||
+                          '), todavía SIN COMMIT. Esperando ' || p_espera_seg ||
+                          's antes de confirmar — corre la otra sesión AHORA.');
+    DBMS_SESSION.SLEEP(p_espera_seg);
 
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('[sin_lock] Reserva ' || p_id_reserva || ' CONFIRMADA sobre habitación ' || p_id_habitacion || '.');

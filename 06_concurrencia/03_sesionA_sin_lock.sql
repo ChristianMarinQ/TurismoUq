@@ -24,7 +24,7 @@ BEGIN
     p_id_cliente    => v_id_cliente,
     p_checkin       => DATE '2026-09-15',
     p_checkout      => DATE '2026-09-18',
-    p_espera_seg    => 30,
+    p_espera_seg    => 120,
     p_id_reserva    => v_id_reserva
   );
 END;
