@@ -118,6 +118,18 @@ ORDER BY r.fecha_checkin;
 -- =====================================================================
 -- 6. Vista materializada de ocupación mensual + política de refresco
 -- =====================================================================
+-- Permite volver a correr este script sobre una BD donde la vista ya
+-- exista (CREATE MATERIALIZED VIEW no admite OR REPLACE en Oracle).
+BEGIN
+  EXECUTE IMMEDIATE 'DROP MATERIALIZED VIEW mv_ocupacion_mensual';
+EXCEPTION
+  WHEN OTHERS THEN
+    IF SQLCODE != -12003 THEN -- ORA-12003: la vista materializada no existe
+      RAISE;
+    END IF;
+END;
+/
+
 CREATE MATERIALIZED VIEW mv_ocupacion_mensual
 BUILD IMMEDIATE
 REFRESH COMPLETE ON DEMAND
@@ -147,7 +159,19 @@ GROUP BY m.id_municipio, m.nombre, EXTRACT(YEAR FROM r.fecha_checkin), EXTRACT(M
 --    gerencial que se consulta como mucho un par de veces al día.
 --  - Un refresco nocturno (baja demanda del sistema) es suficiente: la ocupación de
 --    "ayer" no cambia y los gerentes revisan el reporte en la mañana.
+-- Requiere GRANT CREATE JOB TO turismouq; (una sola vez, conectado como
+-- system/sysdba). Es seguro volver a correr este bloque: si el job ya
+-- existe, se elimina primero.
 BEGIN
+  BEGIN
+    DBMS_SCHEDULER.DROP_JOB('JOB_REFRESH_MV_OCUPACION');
+  EXCEPTION
+    WHEN OTHERS THEN
+      IF SQLCODE != -27475 THEN -- ORA-27475: el job no existe
+        RAISE;
+      END IF;
+  END;
+
   DBMS_SCHEDULER.CREATE_JOB(
     job_name        => 'JOB_REFRESH_MV_OCUPACION',
     job_type        => 'PLSQL_BLOCK',

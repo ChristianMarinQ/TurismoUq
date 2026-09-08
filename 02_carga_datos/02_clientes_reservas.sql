@@ -101,8 +101,9 @@ DECLARE
   v_hoy                CONSTANT DATE := DATE '2026-09-07';
 
   TYPE t_num IS TABLE OF NUMBER;
-  v_hab_ids   t_num;
-  v_hab_caps  t_num;
+  v_hab_ids     t_num;
+  v_hab_caps    t_num;
+  v_cliente_ids t_num;
 
   CURSOR c_rooms(p_alo NUMBER) IS
     SELECT id_habitacion, capacidad FROM habitacion
@@ -118,6 +119,7 @@ DECLARE
   v_rand_metodo NUMBER;
 
   v_calificacion NUMBER;
+  v_comentario   VARCHAR2(200);
   TYPE t_com IS TABLE OF VARCHAR2(200);
   v_comentarios_buenos t_com := t_com(
     'Excelente atención y muy buena ubicación.', 'El lugar superó nuestras expectativas.',
@@ -132,6 +134,8 @@ DECLARE
 BEGIN
   DBMS_RANDOM.SEED(7);
   SELECT COUNT(*) INTO v_total_alojamientos FROM alojamiento;
+  -- IDs reales de cliente (no asumir rango 1..3000: IDENTITY no se reinicia con TRUNCATE)
+  SELECT id_cliente BULK COLLECT INTO v_cliente_ids FROM cliente;
 
   FOR i IN 1..25000 LOOP
     -- Fechas de la estadía
@@ -154,7 +158,7 @@ BEGIN
       END;
     END IF;
 
-    v_id_cliente     := TRUNC(DBMS_RANDOM.VALUE(1,3001));
+    v_id_cliente     := v_cliente_ids(TRUNC(DBMS_RANDOM.VALUE(1, v_cliente_ids.COUNT+1)));
     v_id_alojamiento := TRUNC(DBMS_RANDOM.VALUE(1, v_total_alojamientos+1));
 
     INSERT INTO reserva (id_cliente, fecha_reserva, fecha_checkin, fecha_checkout, estado, valor_total)
@@ -243,14 +247,20 @@ BEGIN
         ELSE TRUNC(DBMS_RANDOM.VALUE(1,3))
       END;
 
+      -- El comentario se resuelve en PL/SQL puro (no dentro del INSERT):
+      -- el método .COUNT de una colección no es válido dentro de una
+      -- expresión SQL embebida (VALUES ...), solo en código PL/SQL.
+      IF v_calificacion >= 4 THEN
+        v_comentario := v_comentarios_buenos(TRUNC(DBMS_RANDOM.VALUE(1, v_comentarios_buenos.COUNT+1)));
+      ELSIF v_calificacion = 3 THEN
+        v_comentario := v_comentarios_medios(TRUNC(DBMS_RANDOM.VALUE(1, v_comentarios_medios.COUNT+1)));
+      ELSE
+        v_comentario := v_comentarios_malos(TRUNC(DBMS_RANDOM.VALUE(1, v_comentarios_malos.COUNT+1)));
+      END IF;
+
       INSERT INTO resena (id_cliente, id_alojamiento, id_reserva, calificacion, comentario, fecha_resena)
       VALUES (
-        v_id_cliente, v_id_alojamiento, v_id_reserva, v_calificacion,
-        CASE
-          WHEN v_calificacion >= 4 THEN v_comentarios_buenos(TRUNC(DBMS_RANDOM.VALUE(1,v_comentarios_buenos.COUNT+1)))
-          WHEN v_calificacion = 3  THEN v_comentarios_medios(TRUNC(DBMS_RANDOM.VALUE(1,v_comentarios_medios.COUNT+1)))
-          ELSE v_comentarios_malos(TRUNC(DBMS_RANDOM.VALUE(1,v_comentarios_malos.COUNT+1)))
-        END,
+        v_id_cliente, v_id_alojamiento, v_id_reserva, v_calificacion, v_comentario,
         v_checkout + TRUNC(DBMS_RANDOM.VALUE(1,10))
       );
     END IF;

@@ -29,9 +29,18 @@ sqlplus turismouq@//localhost:1521/XEPDB1 @01_ddl/02_tablas.sql
 sqlplus turismouq@//localhost:1521/XEPDB1 @02_carga_datos/01_datos_maestros.sql
 sqlplus turismouq@//localhost:1521/XEPDB1 @02_carga_datos/02_clientes_reservas.sql
 sqlplus turismouq@//localhost:1521/XEPDB1 @03_consultas_analisis/01_consultas.sql
+
+# 3) Entrega 2 — capa PL/SQL (requiere GRANT CREATE JOB TO turismouq; ya dado en la Entrega 1)
+sqlplus turismouq@//localhost:1521/XEPDB1 @04_plsql/01_tipos.sql
+sqlplus turismouq@//localhost:1521/XEPDB1 @04_plsql/02_tabla_auditoria.sql
+sqlplus turismouq@//localhost:1521/XEPDB1 @04_plsql/03_package_reservas.sql
+sqlplus turismouq@//localhost:1521/XEPDB1 @04_plsql/04_triggers.sql
+sqlplus turismouq@//localhost:1521/XEPDB1 @04_plsql/05_pruebas.sql
 ```
 
 `02_clientes_reservas.sql` genera 25.000 reservas con su lógica de tarifas/pagos/servicios; puede tardar varios minutos. Va mostrando avance cada 1.000 reservas.
+
+`05_pruebas.sql` es el script de demostración para la sustentación: crea reservas válidas e inválidas para mostrar cada excepción (`ORA-20001`..`ORA-20004`), dispara el trigger anti-solape con un INSERT directo, dispara la auditoría de tarifas con un UPDATE masivo, y corre la liquidación mensual.
 
 **Cambia la clave `<clave_turismouq>`** por una propia antes de usar esto en serio (queda en texto plano en `01_tablespace_y_usuario.sql`, solo apta para ambiente local de desarrollo).
 
@@ -47,14 +56,20 @@ TurismoUQ/
 ├── 02_carga_datos/
 │   ├── 01_datos_maestros.sql    # Municipios, tipos, alojamientos, habitaciones, temporadas, tarifas, servicios, usuarios
 │   └── 02_clientes_reservas.sql # 3.000 clientes, 25.000 reservas, pagos, servicios, reseñas
-└── 03_consultas_analisis/
-    └── 01_consultas.sql         # Las 8 consultas obligatorias de la Entrega 1
+├── 03_consultas_analisis/
+│   └── 01_consultas.sql         # Las 8 consultas obligatorias de la Entrega 1
+└── 04_plsql/
+    ├── 01_tipos.sql             # Tipos SQL para pasar listas de habitaciones a sp_crear_reserva
+    ├── 02_tabla_auditoria.sql   # Tabla donde el trigger de auditoría registra cambios de TARIFA
+    ├── 03_package_reservas.sql  # pkg_reservas: fn_valor_estadia, sp_crear_reserva, sp_liquidacion_mensual
+    ├── 04_triggers.sql          # Trigger de sentencia (auditoría) y de fila (anti-solape)
+    └── 05_pruebas.sql           # Script de demo/sustentación con los 7 casos de prueba
 ```
 
 ## Estado del proyecto
 
 - [x] Entrega 1 — Modelo, DDL, carga de datos, 8 consultas de análisis
-- [ ] Entrega 2 — Capa PL/SQL (`fn_valor_estadia`, `sp_crear_reserva`, cursor, paquete, triggers)
+- [x] Entrega 2 — Capa PL/SQL (`fn_valor_estadia`, `sp_crear_reserva`, cursor, paquete, triggers)
 - [ ] Entrega 3 — Transacciones, índices y seguridad
 - [ ] Sustentación
 
