@@ -43,9 +43,10 @@ sqlplus turismouq@//localhost:1521/XEPDB1 @05_transacciones/02_pruebas_transacci
 
 # 5) Entrega 3 — concurrencia (requiere DOS ventanas/worksheets abiertas a la vez)
 sqlplus turismouq@//localhost:1521/XEPDB1 @06_concurrencia/01_pkg_demo_concurrencia.sql
-# luego, en ventana A: 02_sesionA_sin_lock.sql | en ventana B (mientras A espera): 03_sesionB_sin_lock.sql
-# después, en ventana A: 04_sesionA_con_lock.sql | en ventana B (mientras A espera): 05_sesionB_con_lock.sql
-# y para revisar cada experimento: 06_verificar.sql
+# 02_elegir_habitacion.sql (checkin/checkout de cada experimento) para anotar un id_habitacion libre
+# luego, ventana A: 03_sesionA_sin_lock.sql | ventana B (sin esperar nada): 04_sesionB_sin_lock.sql
+# después, ventana A: 06_sesionA_con_lock.sql | ventana B (sin esperar nada): 07_sesionB_con_lock.sql
+# y para revisar cada experimento: 08_verificar.sql
 
 # 6) Entrega 3 — índices
 sqlplus turismouq@//localhost:1521/XEPDB1 @07_indices/01_indices.sql
@@ -90,11 +91,12 @@ TurismoUQ/
 │   └── 02_pruebas_transacciones.sql # Pago exitoso vs. rollback parcial por pago insuficiente
 ├── 06_concurrencia/
 │   ├── 01_pkg_demo_concurrencia.sql # sp_reservar_sin_lock / sp_reservar_con_lock
-│   ├── 02_sesionA_sin_lock.sql  # Experimento SIN bloqueo (reproduce doble reserva)
-│   ├── 03_sesionB_sin_lock.sql
-│   ├── 04_sesionA_con_lock.sql  # Mismo experimento CON SELECT...FOR UPDATE (corrige el problema)
-│   ├── 05_sesionB_con_lock.sql
-│   └── 06_verificar.sql         # Confirma si hubo o no doble reserva
+│   ├── 02_elegir_habitacion.sql # Elige de antemano el id_habitacion del experimento (evita depender de DBMS_OUTPUT en vivo)
+│   ├── 03_sesionA_sin_lock.sql  # Experimento SIN bloqueo (reproduce doble reserva)
+│   ├── 04_sesionB_sin_lock.sql
+│   ├── 06_sesionA_con_lock.sql  # Mismo experimento CON SELECT...FOR UPDATE (corrige el problema)
+│   ├── 07_sesionB_con_lock.sql
+│   └── 08_verificar.sql         # Confirma si hubo o no doble reserva
 ├── 07_indices/
 │   └── 01_indices.sql           # 3 consultas lentas + índices (1 compuesto, 1 función) + 1 caso donde no ayuda
 └── 08_seguridad/
