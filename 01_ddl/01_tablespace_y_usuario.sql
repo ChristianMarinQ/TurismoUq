@@ -18,7 +18,7 @@ CREATE TABLESPACE ts_historico_reservas
 --   DATAFILE 'C:\APP\ORACLE\ORADATA\XE\XEPDB1\ts_historico_reservas01.dbf'
 -- (ajusta segun donde haya quedado instalado tu Oracle XE 21c).
 
--- Usuario/esquema del proyecto. CAMBIA la clave antes de usarla en produccion.
+-- Usuario/esquema del proyecto. La clave no va escrita aqui: sqlplus la pide al ejecutar el script.
 CREATE USER turismouq IDENTIFIED BY "&&clave_turismouq"
   DEFAULT TABLESPACE users
   TEMPORARY TABLESPACE temp

@@ -64,7 +64,7 @@ sqlplus turismouq@//localhost:1521/XEPDB1 @08_seguridad/04_pruebas_seguridad.sql
 
 El experimento de concurrencia (`06_concurrencia/`) necesita **dos ventanas de SQL Developer abiertas al mismo tiempo, ambas conectadas a TurismoUQ** — una hace de "Sesión A" y otra de "Sesión B". Cada script de sesión explica en sus comentarios cuándo correr el otro.
 
-**Cambia la clave `<clave_turismouq>`** por una propia antes de usar esto en serio (queda en texto plano en `01_tablespace_y_usuario.sql`, solo apta para ambiente local de desarrollo).
+**Las claves no van escritas en los scripts.** Al ejecutarlos, sqlplus pide la de cada usuario la primera vez que la necesita (variables `&&clave_turismouq`, `&&clave_demo_recepcion`, etc.) y la reutiliza el resto de la sesión. Elige claves propias.
 
 ## Estructura del repositorio
 
