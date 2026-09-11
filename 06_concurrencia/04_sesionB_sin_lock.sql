@@ -1,11 +1,11 @@
 -- =====================================================================
--- SESIÓN B — experimento SIN bloqueo (paso 3 de 3)
--- Ábrelo en una SEGUNDA pestaña, ya lista ANTES de correr la Sesión A.
--- En cuanto le des Aceptar al cuadro de la Sesión A, ven aquí y corre
--- este (F5) de inmediato — pega el MISMO id_habitacion.
+-- SESION B - experimento SIN bloqueo (paso 3 de 3)
+-- Abrelo en una SEGUNDA pestana, ya lista ANTES de correr la Sesion A.
+-- En cuanto le des Aceptar al cuadro de la Sesion A, ven aqui y corre
+-- este (F5) de inmediato - pega el MISMO id_habitacion.
 --
--- Resultado esperado (el "problema"): esta sesión no espera a la A y
--- logra reservar la misma habitación para fechas que se solapan ->
+-- Resultado esperado (el "problema"): esta sesion no espera a la A y
+-- logra reservar la misma habitacion para fechas que se solapan ->
 -- doble reserva. Verifica con 08_verificar.sql.
 -- =====================================================================
 
@@ -20,14 +20,14 @@ BEGIN
   pkg_demo_concurrencia.sp_reservar_sin_lock(
     p_id_habitacion => &id_habitacion,
     p_id_cliente    => v_id_cliente,
-    p_checkin       => DATE '2026-09-16', -- se solapa a propósito con la Sesión A
+    p_checkin       => DATE '2026-09-16', -- se solapa a proposito con la Sesion A
     p_checkout      => DATE '2026-09-19',
     p_espera_seg    => 0,
     p_id_reserva    => v_id_reserva
   );
 EXCEPTION
   WHEN OTHERS THEN
-    DBMS_OUTPUT.PUT_LINE('Sesión B rechazada -> ' || SQLERRM ||
-      ' (si esto pasó, NO hubo condición de carrera esta vez: la Sesión A ya había confirmado antes de que B llegara al chequeo)');
+    DBMS_OUTPUT.PUT_LINE('Sesion B rechazada -> ' || SQLERRM ||
+      ' (si esto paso, NO hubo condicion de carrera esta vez: la Sesion A ya habia confirmado antes de que B llegara al chequeo)');
 END;
 /

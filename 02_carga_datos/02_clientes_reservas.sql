@@ -1,20 +1,20 @@
 -- =====================================================================
--- TurismoUQ — 02_clientes_reservas.sql
+-- TurismoUQ - 02_clientes_reservas.sql
 -- Ejecutar conectado como: turismouq@//localhost:1521/XEPDB1
 -- Requiere haber corrido antes 01_datos_maestros.sql.
 -- Carga: CLIENTE (3.000), RESERVA (25.000), RESERVA_HABITACION, PAGO,
 --        RESERVA_SERVICIO (>=40.000), RESENA.
--- Puede tardar varios minutos: hay ~25.000 reservas con lógica de
+-- Puede tardar varios minutos: hay ~25.000 reservas con logica de
 -- tarifas, pagos y servicios por fila.
 -- =====================================================================
 
 SET SERVEROUTPUT ON;
 
 -- ---------------------------------------------------------------------
--- Función auxiliar de carga: mismo algoritmo que tendrá fn_valor_estadia
--- en la Entrega 2 (ver docs/00_modelo_ER.md, decisión de diseño 2).
+-- Funcion auxiliar de carga: mismo algoritmo que tendra fn_valor_estadia
+-- en la Entrega 2 (ver docs/00_modelo_ER.md, decision de diseno 2).
 -- Se llama "_seed" porque es solo para poblar datos coherentes en la
--- Entrega 1; la versión oficial se construye dentro del paquete PL/SQL
+-- Entrega 1; la version oficial se construye dentro del paquete PL/SQL
 -- de la Entrega 2.
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_valor_estadia_seed(
@@ -36,7 +36,7 @@ END fn_valor_estadia_seed;
 /
 
 -- ---------------------------------------------------------------------
--- 1. CLIENTE — 3.000 filas
+-- 1. CLIENTE - 3.000 filas
 -- ---------------------------------------------------------------------
 DECLARE
   TYPE t_lista IS TABLE OF VARCHAR2(30);
@@ -122,14 +122,14 @@ DECLARE
   v_comentario   VARCHAR2(200);
   TYPE t_com IS TABLE OF VARCHAR2(200);
   v_comentarios_buenos t_com := t_com(
-    'Excelente atención y muy buena ubicación.', 'El lugar superó nuestras expectativas.',
-    'Volveríamos sin duda, muy recomendado.', 'Muy limpio y cómodo, el desayuno espectacular.'
+    'Excelente atencion y muy buena ubicacion.', 'El lugar supero nuestras expectativas.',
+    'Volveriamos sin duda, muy recomendado.', 'Muy limpio y comodo, el desayuno espectacular.'
   );
   v_comentarios_medios t_com := t_com(
-    'Buena estadía, aunque el servicio puede mejorar.', 'Cumplió lo esperado, nada excepcional.'
+    'Buena estadia, aunque el servicio puede mejorar.', 'Cumplio lo esperado, nada excepcional.'
   );
   v_comentarios_malos t_com := t_com(
-    'La habitación no estaba como en las fotos.', 'Tuvimos problemas con el servicio de recepción.'
+    'La habitacion no estaba como en las fotos.', 'Tuvimos problemas con el servicio de recepcion.'
   );
 BEGIN
   DBMS_RANDOM.SEED(7);
@@ -138,12 +138,12 @@ BEGIN
   SELECT id_cliente BULK COLLECT INTO v_cliente_ids FROM cliente;
 
   FOR i IN 1..25000 LOOP
-    -- Fechas de la estadía
+    -- Fechas de la estadia
     v_checkin  := DATE '2024-01-01' + TRUNC(DBMS_RANDOM.VALUE(0, 1064)); -- hasta ~2026-11-30
     v_noches   := TRUNC(DBMS_RANDOM.VALUE(1,11)); -- 1..10 noches
     v_checkout := v_checkin + v_noches;
 
-    -- Estado según si la estadía ya pasó respecto a "hoy"
+    -- Estado segun si la estadia ya paso respecto a "hoy"
     IF v_checkout < v_hoy THEN
       v_estado := CASE
         WHEN DBMS_RANDOM.VALUE < 0.75 THEN 'FINALIZADA'
@@ -188,9 +188,9 @@ BEGIN
       END;
     END LOOP;
 
-    -- Servicios contratados (solo si la reserva no quedó cancelada/pendiente)
+    -- Servicios contratados (solo si la reserva no quedo cancelada/pendiente)
     IF v_estado IN ('CONFIRMADA','FINALIZADA') THEN
-      v_num_serv_lines := TRUNC(DBMS_RANDOM.VALUE(1,4)); -- 1..3, promedio 2 -> ~40.000+ líneas en total
+      v_num_serv_lines := TRUNC(DBMS_RANDOM.VALUE(1,4)); -- 1..3, promedio 2 -> ~40.000+ lineas en total
       FOR s IN 1..v_num_serv_lines LOOP
         BEGIN
           SELECT id_servicio, precio INTO v_id_servicio, v_precio_serv
@@ -206,7 +206,7 @@ BEGIN
 
           v_valor_total := v_valor_total + v_precio_serv;
         EXCEPTION
-          WHEN NO_DATA_FOUND THEN NULL; -- alojamiento sin servicios (no debería pasar)
+          WHEN NO_DATA_FOUND THEN NULL; -- alojamiento sin servicios (no deberia pasar)
         END;
       END LOOP;
     END IF;
@@ -239,7 +239,7 @@ BEGIN
       VALUES (v_id_reserva, v_checkin - TRUNC(DBMS_RANDOM.VALUE(15,60)), ROUND(v_valor_total*0.4,-2), 'WOMPI', 'REEMBOLSADO');
     END IF;
 
-    -- Reseña (solo reservas finalizadas, ~55% de probabilidad)
+    -- Resena (solo reservas finalizadas, ~55% de probabilidad)
     IF v_estado = 'FINALIZADA' AND DBMS_RANDOM.VALUE < 0.55 THEN
       v_calificacion := CASE
         WHEN DBMS_RANDOM.VALUE < 0.6 THEN TRUNC(DBMS_RANDOM.VALUE(4,6))
@@ -248,8 +248,8 @@ BEGIN
       END;
 
       -- El comentario se resuelve en PL/SQL puro (no dentro del INSERT):
-      -- el método .COUNT de una colección no es válido dentro de una
-      -- expresión SQL embebida (VALUES ...), solo en código PL/SQL.
+      -- el metodo .COUNT de una coleccion no es valido dentro de una
+      -- expresion SQL embebida (VALUES ...), solo en codigo PL/SQL.
       IF v_calificacion >= 4 THEN
         v_comentario := v_comentarios_buenos(TRUNC(DBMS_RANDOM.VALUE(1, v_comentarios_buenos.COUNT+1)));
       ELSIF v_calificacion = 3 THEN
@@ -277,7 +277,7 @@ END;
 
 -- ---------------------------------------------------------------------
 -- Recalcular calificacion_promedio de ALOJAMIENTO a partir de RESENA
--- (se recalculará también vía trigger/proceso en entregas posteriores)
+-- (se recalculara tambien via trigger/proceso en entregas posteriores)
 -- ---------------------------------------------------------------------
 UPDATE alojamiento a
 SET calificacion_promedio = NVL((
@@ -286,7 +286,7 @@ SET calificacion_promedio = NVL((
 COMMIT;
 
 -- ---------------------------------------------------------------------
--- Verificación de volumen mínimo
+-- Verificacion de volumen minimo
 -- ---------------------------------------------------------------------
 SELECT 'cliente' tabla, COUNT(*) filas FROM cliente
 UNION ALL SELECT 'reserva', COUNT(*) FROM reserva

@@ -1,8 +1,8 @@
 -- =====================================================================
--- TurismoUQ — 01_tipos.sql (Entrega 2)
+-- TurismoUQ - 01_tipos.sql (Entrega 2)
 -- Tipos SQL a nivel de esquema, necesarios para pasarle a sp_crear_reserva
 -- la lista de habitaciones de una reserva (una reserva puede incluir
--- varias habitaciones — ver docs/00_modelo_ER.md, decisión de diseño 1).
+-- varias habitaciones - ver docs/00_modelo_ER.md, decision de diseno 1).
 -- Ejecutar conectado como: turismouq@//localhost:1521/XEPDB1
 -- =====================================================================
 

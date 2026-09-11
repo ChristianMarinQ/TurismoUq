@@ -1,7 +1,7 @@
 -- =====================================================================
--- TurismoUQ — 02_tabla_auditoria.sql (Entrega 2)
+-- TurismoUQ - 02_tabla_auditoria.sql (Entrega 2)
 -- Tabla donde el disparador de sentencia trg_auditoria_tarifa (ver
--- 04_triggers.sql) registra cada cambio de precio: quién, cuándo,
+-- 04_triggers.sql) registra cada cambio de precio: quien, cuando,
 -- valor anterior y nuevo.
 -- Ejecutar conectado como: turismouq@//localhost:1521/XEPDB1
 -- =====================================================================

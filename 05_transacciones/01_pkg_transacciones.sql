@@ -1,19 +1,19 @@
 -- =====================================================================
--- TurismoUQ — 01_pkg_transacciones.sql (Entrega 3 · Transacciones)
+-- TurismoUQ - 01_pkg_transacciones.sql (Entrega 3 - Transacciones)
 -- Ejecutar conectado como: turismouq@//localhost:1521/XEPDB1
 -- Requiere Entrega 2 (pkg_reservas, tipos ty_item_habitacion/ty_tab_habitaciones).
 -- =====================================================================
 
 CREATE OR REPLACE PACKAGE pkg_transacciones AS
 
-  -- Registra una reserva y su pago de forma atómica:
-  --   1) Crea la reserva (estado PENDIENTE) y sus líneas de habitación.
+  -- Registra una reserva y su pago de forma atomica:
+  --   1) Crea la reserva (estado PENDIENTE) y sus lineas de habitacion.
   --   2) SAVEPOINT.
   --   3) Intenta registrar el pago y confirmar la reserva.
   --   4) Si el pago falla (monto insuficiente, etc.), hace ROLLBACK TO
   --      SAVEPOINT: deshace SOLO el intento de pago, la reserva queda
   --      creada y en PENDIENTE (no se pierde la reserva por un pago malo).
-  -- p_pago_exitoso queda en 'S' o 'N' para que el llamador sepa qué pasó.
+  -- p_pago_exitoso queda en 'S' o 'N' para que el llamador sepa que paso.
   PROCEDURE sp_registrar_reserva_pago(
     p_id_cliente    IN  NUMBER,
     p_checkin       IN  DATE,
@@ -43,9 +43,9 @@ CREATE OR REPLACE PACKAGE BODY pkg_transacciones AS
   IS
     v_total NUMBER;
   BEGIN
-    -- Paso 1: crear la reserva (reutiliza toda la validación de la Entrega 2:
+    -- Paso 1: crear la reserva (reutiliza toda la validacion de la Entrega 2:
     -- fechas, capacidad, disponibilidad). Si esto falla, no hay nada que
-    -- deshacer todavía (sp_crear_reserva no escribe nada si algo es inválido).
+    -- deshacer todavia (sp_crear_reserva no escribe nada si algo es invalido).
     pkg_reservas.sp_crear_reserva(
       p_id_cliente   => p_id_cliente,
       p_checkin      => p_checkin,
@@ -55,7 +55,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_transacciones AS
     );
 
     -- sp_crear_reserva deja la reserva en CONFIRMADA; para este flujo
-    -- (reserva + pago atómico) la bajamos a PENDIENTE hasta que el pago
+    -- (reserva + pago atomico) la bajamos a PENDIENTE hasta que el pago
     -- se confirme.
     UPDATE reserva SET estado = 'PENDIENTE' WHERE id_reserva = p_id_reserva;
     SELECT valor_total INTO v_total FROM reserva WHERE id_reserva = p_id_reserva;
@@ -79,7 +79,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_transacciones AS
     EXCEPTION
       WHEN OTHERS THEN
         -- Rollback PARCIAL: deshace el intento de pago (y el UPDATE de
-        -- estado si alcanzó a correr), pero NO la reserva del paso 1,
+        -- estado si alcanzo a correr), pero NO la reserva del paso 1,
         -- que sigue viva desde antes del SAVEPOINT.
         ROLLBACK TO sp_despues_reserva;
         p_pago_exitoso := 'N';

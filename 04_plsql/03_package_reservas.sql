@@ -1,28 +1,28 @@
 -- =====================================================================
--- TurismoUQ — 03_package_reservas.sql (Entrega 2)
+-- TurismoUQ - 03_package_reservas.sql (Entrega 2)
 -- Paquete pkg_reservas: fn_valor_estadia, sp_crear_reserva y
--- sp_liquidacion_mensual (con cursor explícito parametrizado).
+-- sp_liquidacion_mensual (con cursor explicito parametrizado).
 -- Ejecutar conectado como: turismouq@//localhost:1521/XEPDB1
 -- Requiere haber corrido antes 01_tipos.sql y 02_tabla_auditoria.sql.
 -- =====================================================================
 
 CREATE OR REPLACE PACKAGE pkg_reservas AS
 
-  -- Calcula el valor de una estadía prorrateando por cada temporada que
+  -- Calcula el valor de una estadia prorrateando por cada temporada que
   -- atraviese el rango [p_checkin, p_checkout). Ver docs/00_modelo_ER.md,
-  -- decisión de diseño 2, para el algoritmo.
+  -- decision de diseno 2, para el algoritmo.
   FUNCTION fn_valor_estadia(
     p_id_habitacion IN NUMBER,
     p_checkin       IN DATE,
     p_checkout      IN DATE
   ) RETURN NUMBER;
 
-  -- Crea una reserva con una o varias habitaciones (decisión de diseño 1).
-  -- Lanza excepciones propias vía RAISE_APPLICATION_ERROR:
+  -- Crea una reserva con una o varias habitaciones (decision de diseno 1).
+  -- Lanza excepciones propias via RAISE_APPLICATION_ERROR:
   --   -20001  checkout <= checkin
-  --   -20002  habitación no disponible en esas fechas (solapamiento)
-  --   -20003  capacidad de la habitación excedida
-  --   -20004  no se indicó ninguna habitación
+  --   -20002  habitacion no disponible en esas fechas (solapamiento)
+  --   -20003  capacidad de la habitacion excedida
+  --   -20004  no se indico ninguna habitacion
   PROCEDURE sp_crear_reserva(
     p_id_cliente    IN  NUMBER,
     p_checkin       IN  DATE,
@@ -31,9 +31,9 @@ CREATE OR REPLACE PACKAGE pkg_reservas AS
     p_id_reserva    OUT NUMBER
   );
 
-  -- Proceso masivo: liquidación (resumen de ingresos) de un alojamiento
-  -- para un mes/año dado, recorriendo sus reservas FINALIZADAS con un
-  -- cursor explícito parametrizado. Imprime el detalle con DBMS_OUTPUT.
+  -- Proceso masivo: liquidacion (resumen de ingresos) de un alojamiento
+  -- para un mes/ano dado, recorriendo sus reservas FINALIZADAS con un
+  -- cursor explicito parametrizado. Imprime el detalle con DBMS_OUTPUT.
   PROCEDURE sp_liquidacion_mensual(
     p_id_alojamiento IN NUMBER,
     p_anio           IN NUMBER,
@@ -84,7 +84,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_reservas AS
     END IF;
 
     IF p_habitaciones IS NULL OR p_habitaciones.COUNT = 0 THEN
-      RAISE_APPLICATION_ERROR(-20004, 'La reserva debe incluir al menos una habitación.');
+      RAISE_APPLICATION_ERROR(-20004, 'La reserva debe incluir al menos una habitacion.');
     END IF;
 
     -- Fase 1: validar TODAS las habitaciones antes de escribir nada,
@@ -96,9 +96,9 @@ CREATE OR REPLACE PACKAGE BODY pkg_reservas AS
 
       IF p_habitaciones(i).num_huespedes > v_capacidad THEN
         RAISE_APPLICATION_ERROR(-20003,
-          'La habitación ' || p_habitaciones(i).id_habitacion ||
+          'La habitacion ' || p_habitaciones(i).id_habitacion ||
           ' tiene capacidad ' || v_capacidad || ' y se pidieron ' ||
-          p_habitaciones(i).num_huespedes || ' huéspedes.');
+          p_habitaciones(i).num_huespedes || ' huespedes.');
       END IF;
 
       SELECT COUNT(*) INTO v_conflictos
@@ -111,8 +111,8 @@ CREATE OR REPLACE PACKAGE BODY pkg_reservas AS
 
       IF v_conflictos > 0 THEN
         RAISE_APPLICATION_ERROR(-20002,
-          'La habitación ' || p_habitaciones(i).id_habitacion ||
-          ' no está disponible entre ' || TO_CHAR(p_checkin, 'YYYY-MM-DD') ||
+          'La habitacion ' || p_habitaciones(i).id_habitacion ||
+          ' no esta disponible entre ' || TO_CHAR(p_checkin, 'YYYY-MM-DD') ||
           ' y ' || TO_CHAR(p_checkout, 'YYYY-MM-DD') || '.');
       END IF;
     END LOOP;
@@ -141,8 +141,8 @@ CREATE OR REPLACE PACKAGE BODY pkg_reservas AS
     p_mes            IN NUMBER
   )
   IS
-    -- Cursor explícito con parámetros: recorre las reservas FINALIZADAS
-    -- de un alojamiento durante un mes/año dado.
+    -- Cursor explicito con parametros: recorre las reservas FINALIZADAS
+    -- de un alojamiento durante un mes/ano dado.
     CURSOR c_reservas_mes(p_id_alojamiento NUMBER, p_anio NUMBER, p_mes NUMBER) IS
       SELECT r.id_reserva, r.fecha_checkin, r.fecha_checkout, r.valor_total
       FROM reserva r
@@ -163,7 +163,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_reservas AS
   BEGIN
     SELECT nombre INTO v_nombre_alojam FROM alojamiento WHERE id_alojamiento = p_id_alojamiento;
 
-    DBMS_OUTPUT.PUT_LINE('=== Liquidación ' || p_mes || '/' || p_anio || ' — ' || v_nombre_alojam || ' ===');
+    DBMS_OUTPUT.PUT_LINE('=== Liquidacion ' || p_mes || '/' || p_anio || ' - ' || v_nombre_alojam || ' ===');
 
     FOR r IN c_reservas_mes(p_id_alojamiento, p_anio, p_mes) LOOP
       DBMS_OUTPUT.PUT_LINE(

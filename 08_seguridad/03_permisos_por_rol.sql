@@ -1,7 +1,7 @@
 -- =====================================================================
--- TurismoUQ — 03_permisos_por_rol.sql (Entrega 3 · Seguridad)
+-- TurismoUQ - 03_permisos_por_rol.sql (Entrega 3 - Seguridad)
 -- Otorga los privilegios de cada rol. Se ejecuta conectado como
--- turismouq (dueño de las tablas/vistas/paquetes) — cualquier dueño de
+-- turismouq (dueno de las tablas/vistas/paquetes) - cualquier dueno de
 -- objeto puede otorgar privilegios sobre lo que le pertenece a un rol,
 -- sin necesitar privilegios de sistema adicionales.
 -- Requiere haber corrido antes 01_roles_usuarios_profile.sql (como
@@ -10,12 +10,12 @@
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
--- ROL_RECEPCION: opera SOLO a través de vistas y del paquete
--- pkg_reservas (que corre con privilegios del dueño, turismouq). Nunca
--- recibe SELECT/INSERT/UPDATE directo sobre las tablas base — así, aunque
+-- ROL_RECEPCION: opera SOLO a traves de vistas y del paquete
+-- pkg_reservas (que corre con privilegios del dueno, turismouq). Nunca
+-- recibe SELECT/INSERT/UPDATE directo sobre las tablas base - asi, aunque
 -- alguien con este rol intente "SELECT * FROM reserva", Oracle se lo
 -- niega (ORA-00942), y solo puede leer lo que exponen las vistas y
--- escribir reservas a través de sp_crear_reserva (que sí valida reglas
+-- escribir reservas a traves de sp_crear_reserva (que si valida reglas
 -- de negocio: fechas, disponibilidad, capacidad).
 -- ---------------------------------------------------------------------
 GRANT SELECT ON v_disponibilidad_habitaciones TO rol_recepcion;
@@ -24,11 +24,11 @@ GRANT SELECT ON v_clientes_directorio         TO rol_recepcion;
 GRANT EXECUTE ON pkg_reservas                 TO rol_recepcion;
 
 -- ---------------------------------------------------------------------
--- ROL_ADMIN_ALOJAMIENTO: administra el catálogo operativo (habitaciones,
+-- ROL_ADMIN_ALOJAMIENTO: administra el catalogo operativo (habitaciones,
 -- tarifas, servicios de su(s) alojamiento(s)) y consulta reservas para
--- saber qué está pasando en su propiedad. No toca pagos ni usuarios del
--- sistema. (Restringir esto a "solo su propio alojamiento" requeriría
--- Virtual Private Database/contexto de aplicación — queda como mejora
+-- saber que esta pasando en su propiedad. No toca pagos ni usuarios del
+-- sistema. (Restringir esto a "solo su propio alojamiento" requeriria
+-- Virtual Private Database/contexto de aplicacion - queda como mejora
 -- futura, fuera del alcance de esta entrega.)
 -- ---------------------------------------------------------------------
 GRANT SELECT, INSERT, UPDATE         ON alojamiento TO rol_admin_alojamiento;
@@ -41,7 +41,7 @@ GRANT SELECT ON resena             TO rol_admin_alojamiento;
 
 -- ---------------------------------------------------------------------
 -- ROL_GERENTE: lectura amplia para reportes y toma de decisiones +
--- ejecutar las funciones/procedimientos de consulta (liquidación
+-- ejecutar las funciones/procedimientos de consulta (liquidacion
 -- mensual). Nunca inserta/actualiza/borra directamente.
 -- ---------------------------------------------------------------------
 GRANT SELECT ON municipio          TO rol_gerente;
@@ -62,8 +62,8 @@ GRANT EXECUTE ON pkg_reservas      TO rol_gerente;
 
 -- ---------------------------------------------------------------------
 -- ROL_AUDITOR: lectura total, incluyendo lo que ni gerencia ni
--- recepción deberían ver (usuarios del sistema, auditoría de tarifas).
--- Estrictamente de solo lectura: no se le da EXECUTE sobre ningún
+-- recepcion deberian ver (usuarios del sistema, auditoria de tarifas).
+-- Estrictamente de solo lectura: no se le da EXECUTE sobre ningun
 -- paquete, porque un auditor observa, no opera.
 -- ---------------------------------------------------------------------
 GRANT SELECT ON municipio          TO rol_auditor;

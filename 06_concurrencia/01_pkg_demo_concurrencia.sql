@@ -1,12 +1,12 @@
 -- =====================================================================
--- TurismoUQ — 01_pkg_demo_concurrencia.sql (Entrega 3 · Concurrencia)
--- Paquete SOLO PARA EL EXPERIMENTO de concurrencia de la sustentación.
--- No lo usa la aplicación real (para eso está pkg_reservas.sp_crear_reserva).
+-- TurismoUQ - 01_pkg_demo_concurrencia.sql (Entrega 3 - Concurrencia)
+-- Paquete SOLO PARA EL EXPERIMENTO de concurrencia de la sustentacion.
+-- No lo usa la aplicacion real (para eso esta pkg_reservas.sp_crear_reserva).
 --
--- Reproduce a propósito la condición de carrera clásica
+-- Reproduce a proposito la condicion de carrera clasica
 -- "verificar disponibilidad, LUEGO insertar": entre el chequeo y el
 -- INSERT hay una pausa (DBMS_SESSION.SLEEP) para poder correr una
--- segunda sesión en el medio, a mano, desde otra ventana.
+-- segunda sesion en el medio, a mano, desde otra ventana.
 --
 -- sp_reservar_sin_lock  -> reproduce el problema (puede doble-reservar).
 -- sp_reservar_con_lock  -> lo corrige con SELECT ... FOR UPDATE sobre la
@@ -61,18 +61,18 @@ CREATE OR REPLACE PACKAGE BODY pkg_demo_concurrencia AS
 
     IF v_conflictos > 0 THEN
       RAISE_APPLICATION_ERROR(-20002,
-        'Habitación ' || p_id_habitacion || ' no disponible (detectado en el chequeo, sin bloqueo).');
+        'Habitacion ' || p_id_habitacion || ' no disponible (detectado en el chequeo, sin bloqueo).');
     END IF;
 
     -- OJO: el trigger trg_no_solape_reserva vuelve a chequear solapamiento
-    -- justo en este INSERT, así que el chequeo de arriba no alcanza a
-    -- proteger nada por sí solo. La condición de carrera real no está
+    -- justo en este INSERT, asi que el chequeo de arriba no alcanza a
+    -- proteger nada por si solo. La condicion de carrera real no esta
     -- entre "chequear" e "insertar" (el trigger ya cubre eso), sino entre
-    -- "insertar" (ya pasó el trigger, pero SIN COMMIT todavía) y
+    -- "insertar" (ya paso el trigger, pero SIN COMMIT todavia) y
     -- "confirmar" (COMMIT): mientras esta fila exista sin commit, OTRA
-    -- sesión no la ve (READ COMMITTED) y su propio INSERT/trigger también
-    -- pasa sin problema — ahí es donde se cuela la doble reserva. Por eso
-    -- la pausa va DESPUÉS de insertar y ANTES de hacer COMMIT.
+    -- sesion no la ve (READ COMMITTED) y su propio INSERT/trigger tambien
+    -- pasa sin problema - ahi es donde se cuela la doble reserva. Por eso
+    -- la pausa va DESPUES de insertar y ANTES de hacer COMMIT.
     INSERT INTO reserva (id_cliente, fecha_checkin, fecha_checkout, estado, valor_total)
     VALUES (p_id_cliente, p_checkin, p_checkout, 'CONFIRMADA', 0)
     RETURNING id_reserva INTO p_id_reserva;
@@ -85,12 +85,12 @@ CREATE OR REPLACE PACKAGE BODY pkg_demo_concurrencia AS
     UPDATE reserva SET valor_total = v_valor WHERE id_reserva = p_id_reserva;
 
     DBMS_OUTPUT.PUT_LINE('[sin_lock] Insertado (reserva ' || p_id_reserva ||
-                          '), todavía SIN COMMIT. Esperando ' || p_espera_seg ||
-                          's antes de confirmar — corre la otra sesión AHORA.');
+                          '), todavia SIN COMMIT. Esperando ' || p_espera_seg ||
+                          's antes de confirmar - corre la otra sesion AHORA.');
     DBMS_SESSION.SLEEP(p_espera_seg);
 
     COMMIT;
-    DBMS_OUTPUT.PUT_LINE('[sin_lock] Reserva ' || p_id_reserva || ' CONFIRMADA sobre habitación ' || p_id_habitacion || '.');
+    DBMS_OUTPUT.PUT_LINE('[sin_lock] Reserva ' || p_id_reserva || ' CONFIRMADA sobre habitacion ' || p_id_habitacion || '.');
   END sp_reservar_sin_lock;
 
 
@@ -107,11 +107,11 @@ CREATE OR REPLACE PACKAGE BODY pkg_demo_concurrencia AS
     v_conflictos NUMBER;
     v_valor      NUMBER;
   BEGIN
-    DBMS_OUTPUT.PUT_LINE('[con_lock] Bloqueando habitación ' || p_id_habitacion || ' con SELECT ... FOR UPDATE...');
+    DBMS_OUTPUT.PUT_LINE('[con_lock] Bloqueando habitacion ' || p_id_habitacion || ' con SELECT ... FOR UPDATE...');
     SELECT id_habitacion INTO v_dummy FROM habitacion WHERE id_habitacion = p_id_habitacion FOR UPDATE;
 
     DBMS_OUTPUT.PUT_LINE('[con_lock] Bloqueo obtenido. Esperando ' || p_espera_seg ||
-                          's — si corres la otra sesión ahora, debería quedarse esperando.');
+                          's - si corres la otra sesion ahora, deberia quedarse esperando.');
     DBMS_SESSION.SLEEP(p_espera_seg);
 
     SELECT COUNT(*) INTO v_conflictos
@@ -124,7 +124,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_demo_concurrencia AS
 
     IF v_conflictos > 0 THEN
       RAISE_APPLICATION_ERROR(-20002,
-        'Habitación ' || p_id_habitacion || ' no disponible (detectado con el bloqueo activo).');
+        'Habitacion ' || p_id_habitacion || ' no disponible (detectado con el bloqueo activo).');
     END IF;
 
     INSERT INTO reserva (id_cliente, fecha_checkin, fecha_checkout, estado, valor_total)
@@ -139,7 +139,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_demo_concurrencia AS
     UPDATE reserva SET valor_total = v_valor WHERE id_reserva = p_id_reserva;
 
     COMMIT; -- libera el bloqueo sobre HABITACION
-    DBMS_OUTPUT.PUT_LINE('[con_lock] Reserva ' || p_id_reserva || ' CONFIRMADA sobre habitación ' || p_id_habitacion || '. Bloqueo liberado.');
+    DBMS_OUTPUT.PUT_LINE('[con_lock] Reserva ' || p_id_reserva || ' CONFIRMADA sobre habitacion ' || p_id_habitacion || '. Bloqueo liberado.');
   END sp_reservar_con_lock;
 
 END pkg_demo_concurrencia;

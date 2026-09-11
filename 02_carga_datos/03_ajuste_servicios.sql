@@ -1,8 +1,8 @@
 -- =====================================================================
--- TurismoUQ — 03_ajuste_servicios.sql
--- Agrega líneas a RESERVA_SERVICIO hasta superar el volumen mínimo
+-- TurismoUQ - 03_ajuste_servicios.sql
+-- Agrega lineas a RESERVA_SERVICIO hasta superar el volumen minimo
 -- (40.000) sin rehacer toda la carga de reservas. Es seguro correrlo
--- varias veces: si ya se cumplió el mínimo, no hace nada.
+-- varias veces: si ya se cumplio el minimo, no hace nada.
 -- Ejecutar conectado como: turismouq@//localhost:1521/XEPDB1
 -- =====================================================================
 
@@ -22,16 +22,16 @@ DECLARE
   v_idx         PLS_INTEGER;
 BEGIN
   SELECT COUNT(*) INTO v_actual FROM reserva_servicio;
-  v_faltan := 41000 - v_actual; -- margen sobre el mínimo de 40.000
+  v_faltan := 41000 - v_actual; -- margen sobre el minimo de 40.000
 
   IF v_faltan <= 0 THEN
-    DBMS_OUTPUT.PUT_LINE('Ya hay ' || v_actual || ' líneas, no hace falta agregar más.');
+    DBMS_OUTPUT.PUT_LINE('Ya hay ' || v_actual || ' lineas, no hace falta agregar mas.');
   ELSE
-    DBMS_OUTPUT.PUT_LINE('Hay ' || v_actual || ' líneas, agregando ' || v_faltan || ' más...');
+    DBMS_OUTPUT.PUT_LINE('Hay ' || v_actual || ' lineas, agregando ' || v_faltan || ' mas...');
 
     -- Cargar UNA sola vez la lista de reservas elegibles con su alojamiento
     -- (antes se reordenaba aleatoriamente esta consulta en cada vuelta del
-    -- loop, lo cual era muy lento y mantenía transacciones abiertas más
+    -- loop, lo cual era muy lento y mantenia transacciones abiertas mas
     -- tiempo del necesario).
     SELECT r.id_reserva, h.id_alojamiento
     BULK COLLECT INTO v_reserva_ids, v_alojamiento_ids
@@ -62,7 +62,7 @@ BEGIN
 
         IF MOD(i, 2000) = 0 THEN
           COMMIT;
-          DBMS_OUTPUT.PUT_LINE('Líneas agregadas: ' || i);
+          DBMS_OUTPUT.PUT_LINE('Lineas agregadas: ' || i);
         END IF;
       EXCEPTION
         WHEN NO_DATA_FOUND THEN NULL;

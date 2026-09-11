@@ -1,7 +1,7 @@
 -- =====================================================================
--- TurismoUQ — 02_vistas_recepcion.sql (Entrega 3 · Seguridad)
--- Vistas por las que el rol de recepción accede a los datos — NUNCA
--- directo a las tablas base (ver justificación en 03_permisos_por_rol.sql).
+-- TurismoUQ - 02_vistas_recepcion.sql (Entrega 3 - Seguridad)
+-- Vistas por las que el rol de recepcion accede a los datos - NUNCA
+-- directo a las tablas base (ver justificacion en 03_permisos_por_rol.sql).
 -- Ejecutar conectado como: turismouq@//localhost:1521/XEPDB1
 -- =====================================================================
 

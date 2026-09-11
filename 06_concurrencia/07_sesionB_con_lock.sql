@@ -1,15 +1,15 @@
 -- =====================================================================
--- SESIÓN B — experimento CON bloqueo (paso 3 de 3)
--- Ábrelo en la segunda pestaña, ya listo ANTES de correr la Sesión A.
--- En cuanto le des Aceptar al cuadro de la Sesión A, ven aquí y corre
--- este (F5) de inmediato — pega el MISMO id_habitacion.
+-- SESION B - experimento CON bloqueo (paso 3 de 3)
+-- Abrelo en la segunda pestana, ya listo ANTES de correr la Sesion A.
+-- En cuanto le des Aceptar al cuadro de la Sesion A, ven aqui y corre
+-- este (F5) de inmediato - pega el MISMO id_habitacion.
 --
--- Resultado esperado (la corrección): esta sesión se queda "pensando"
--- (el ícono de ejecución sigue girando, sin mostrar nada) porque está
--- esperando a que la Sesión A libere el bloqueo. Cuando la Sesión A
+-- Resultado esperado (la correccion): esta sesion se queda "pensando"
+-- (el icono de ejecucion sigue girando, sin mostrar nada) porque esta
+-- esperando a que la Sesion A libere el bloqueo. Cuando la Sesion A
 -- termine (a los 30s) y haga COMMIT, esta se libera, hace su propio
 -- chequeo, YA ve la reserva de A, y la rechaza con ORA-20002.
--- Verifica con 08_verificar.sql que NO quedó doble reserva.
+-- Verifica con 08_verificar.sql que NO quedo doble reserva.
 -- =====================================================================
 
 SET SERVEROUTPUT ON;
@@ -23,13 +23,13 @@ BEGIN
   pkg_demo_concurrencia.sp_reservar_con_lock(
     p_id_habitacion => &id_habitacion,
     p_id_cliente    => v_id_cliente,
-    p_checkin       => DATE '2026-09-23', -- se solapa a propósito con la Sesión A
+    p_checkin       => DATE '2026-09-23', -- se solapa a proposito con la Sesion A
     p_checkout      => DATE '2026-09-26',
     p_espera_seg    => 0,
     p_id_reserva    => v_id_reserva
   );
 EXCEPTION
   WHEN OTHERS THEN
-    DBMS_OUTPUT.PUT_LINE('Sesión B rechazada como se esperaba (después de esperar el bloqueo) -> ' || SQLERRM);
+    DBMS_OUTPUT.PUT_LINE('Sesion B rechazada como se esperaba (despues de esperar el bloqueo) -> ' || SQLERRM);
 END;
 /

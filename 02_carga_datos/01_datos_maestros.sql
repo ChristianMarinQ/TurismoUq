@@ -1,5 +1,5 @@
 -- =====================================================================
--- TurismoUQ — 01_datos_maestros.sql
+-- TurismoUQ - 01_datos_maestros.sql
 -- Ejecutar conectado como: turismouq@//localhost:1521/XEPDB1
 -- Carga: MUNICIPIO, TIPO_ALOJAMIENTO, ALOJAMIENTO (60), HABITACION (400),
 --        TEMPORADA, TARIFA, SERVICIO, USUARIO_SISTEMA.
@@ -9,14 +9,14 @@
 SET SERVEROUTPUT ON;
 
 -- ---------------------------------------------------------------------
--- 1. MUNICIPIO (los 12 del Quindío)
+-- 1. MUNICIPIO (los 12 del Quindio)
 -- ---------------------------------------------------------------------
 INSERT INTO municipio (nombre) VALUES ('Armenia');
-INSERT INTO municipio (nombre) VALUES ('Calarcá');
+INSERT INTO municipio (nombre) VALUES ('Calarca');
 INSERT INTO municipio (nombre) VALUES ('Circasia');
-INSERT INTO municipio (nombre) VALUES ('Córdoba');
+INSERT INTO municipio (nombre) VALUES ('Cordoba');
 INSERT INTO municipio (nombre) VALUES ('Filandia');
-INSERT INTO municipio (nombre) VALUES ('Génova');
+INSERT INTO municipio (nombre) VALUES ('Genova');
 INSERT INTO municipio (nombre) VALUES ('La Tebaida');
 INSERT INTO municipio (nombre) VALUES ('Montenegro');
 INSERT INTO municipio (nombre) VALUES ('Pijao');
@@ -27,23 +27,23 @@ INSERT INTO municipio (nombre) VALUES ('Buenavista');
 -- ---------------------------------------------------------------------
 -- 2. TIPO_ALOJAMIENTO
 -- ---------------------------------------------------------------------
-INSERT INTO tipo_alojamiento (nombre, descripcion) VALUES ('Finca Cafetera', 'Alojamiento rural en finca productora de café');
-INSERT INTO tipo_alojamiento (nombre, descripcion) VALUES ('Hotel', 'Alojamiento urbano con servicios hoteleros estándar');
-INSERT INTO tipo_alojamiento (nombre, descripcion) VALUES ('Glamping', 'Alojamiento tipo camping de lujo (domos, cabañas)');
-INSERT INTO tipo_alojamiento (nombre, descripcion) VALUES ('Hostal', 'Alojamiento económico, habitaciones individuales o compartidas');
+INSERT INTO tipo_alojamiento (nombre, descripcion) VALUES ('Finca Cafetera', 'Alojamiento rural en finca productora de cafe');
+INSERT INTO tipo_alojamiento (nombre, descripcion) VALUES ('Hotel', 'Alojamiento urbano con servicios hoteleros estandar');
+INSERT INTO tipo_alojamiento (nombre, descripcion) VALUES ('Glamping', 'Alojamiento tipo camping de lujo (domos, cabanas)');
+INSERT INTO tipo_alojamiento (nombre, descripcion) VALUES ('Hostal', 'Alojamiento economico, habitaciones individuales o compartidas');
 
 COMMIT;
 
 -- ---------------------------------------------------------------------
--- 3. ALOJAMIENTO — 60 filas
+-- 3. ALOJAMIENTO - 60 filas
 -- ---------------------------------------------------------------------
 DECLARE
   TYPE t_lista IS TABLE OF VARCHAR2(40);
   v_nombres_base t_lista := t_lista(
-    'Vista Hermosa','El Mirador','Buenos Aires','La Esperanza','El Paraíso',
-    'Villa del Río','Los Naranjos','El Recuerdo','Bella Vista','El Encanto',
-    'La Palma','Villa Café','El Roble','Monte Verde','La Colina',
-    'El Jardín','Villa Sol','La Cascada','El Bosque','Rincón Andino'
+    'Vista Hermosa','El Mirador','Buenos Aires','La Esperanza','El Paraiso',
+    'Villa del Rio','Los Naranjos','El Recuerdo','Bella Vista','El Encanto',
+    'La Palma','Villa Cafe','El Roble','Monte Verde','La Colina',
+    'El Jardin','Villa Sol','La Cascada','El Bosque','Rincon Andino'
   );
   v_id_municipio NUMBER;
   v_id_tipo      NUMBER;
@@ -74,7 +74,7 @@ END;
 /
 
 -- ---------------------------------------------------------------------
--- 4. HABITACION — exactamente 400 filas repartidas entre los 60 alojamientos
+-- 4. HABITACION - exactamente 400 filas repartidas entre los 60 alojamientos
 --    (cada alojamiento recibe entre 6 y 7 habitaciones)
 -- ---------------------------------------------------------------------
 DECLARE
@@ -105,8 +105,8 @@ END;
 /
 
 -- ---------------------------------------------------------------------
--- 5. TEMPORADA — filas concretas por año 2024/2025/2026, particionando
---    el calendario completo (ver docs/00_modelo_ER.md, decisión de diseño 2)
+-- 5. TEMPORADA - filas concretas por ano 2024/2025/2026, particionando
+--    el calendario completo (ver docs/00_modelo_ER.md, decision de diseno 2)
 -- ---------------------------------------------------------------------
 DECLARE
   TYPE t_periodo IS RECORD (
@@ -147,18 +147,18 @@ DECLARE
     v_anio_inicio := TO_DATE(p_anio || '-01-01', 'YYYY-MM-DD');
     v_anio_fin    := TO_DATE(p_anio || '-12-31', 'YYYY-MM-DD');
 
-    -- Enero: si el año anterior ya generó su tramo de diciembre, aquí solo
-    -- va la cola "Diciembre-Enero" de enero; si no (2024, primer año del
-    -- histórico), va un puente corto de año nuevo.
+    -- Enero: si el ano anterior ya genero su tramo de diciembre, aqui solo
+    -- va la cola "Diciembre-Enero" de enero; si no (2024, primer ano del
+    -- historico), va un puente corto de ano nuevo.
     IF p_anio > 2024 THEN
       agregar(v_anio_inicio, TO_DATE(p_anio || '-01-15', 'YYYY-MM-DD'),
               'Diciembre-Enero ' || (p_anio-1) || '-' || p_anio || ' (enero)', 'ALTA', 1.6);
     ELSE
       agregar(v_anio_inicio, TO_DATE(p_anio || '-01-03', 'YYYY-MM-DD'),
-              'Puente año nuevo ' || p_anio, 'ALTA', 1.4);
+              'Puente ano nuevo ' || p_anio, 'ALTA', 1.4);
     END IF;
 
-    -- Semana Santa (fechas reales por año)
+    -- Semana Santa (fechas reales por ano)
     IF p_anio = 2024 THEN
       agregar(DATE '2024-03-24', DATE '2024-03-31', 'Semana Santa 2024', 'ALTA', 1.6);
     ELSIF p_anio = 2025 THEN
@@ -171,7 +171,7 @@ DECLARE
             'Puente mayo ' || p_anio, 'ALTA', 1.4);
 
     agregar(TO_DATE(p_anio || '-06-15', 'YYYY-MM-DD'), TO_DATE(p_anio || '-07-15', 'YYYY-MM-DD'),
-            'Mitad de año ' || p_anio, 'MEDIA', 1.2);
+            'Mitad de ano ' || p_anio, 'MEDIA', 1.2);
 
     agregar(TO_DATE(p_anio || '-08-07', 'YYYY-MM-DD'), TO_DATE(p_anio || '-08-09', 'YYYY-MM-DD'),
             'Puente agosto ' || p_anio, 'ALTA', 1.4);
@@ -211,8 +211,8 @@ END;
 /
 
 -- ---------------------------------------------------------------------
--- 6. TARIFA — una fila por cada combinación (habitación, temporada)
---    valor_noche = precio_base(tipo_alojamiento, tipo_habitacion) * factor_ajuste * ruido(±10%)
+-- 6. TARIFA - una fila por cada combinacion (habitacion, temporada)
+--    valor_noche = precio_base(tipo_alojamiento, tipo_habitacion) * factor_ajuste * ruido(+/-10%)
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_precio_base_seed(p_tipo_alojamiento VARCHAR2, p_tipo_habitacion VARCHAR2)
 RETURN NUMBER
@@ -286,13 +286,13 @@ END;
 /
 
 -- ---------------------------------------------------------------------
--- 7. SERVICIO — 4 a 6 servicios por alojamiento (catálogo variado)
+-- 7. SERVICIO - 4 a 6 servicios por alojamiento (catalogo variado)
 -- ---------------------------------------------------------------------
 DECLARE
   TYPE t_cat IS TABLE OF VARCHAR2(60);
   v_catalogo t_cat := t_cat(
     'Desayuno incluido','Tour cafetero','Transporte aeropuerto','Cabalgata',
-    'Spa y masajes','Piscina','Parqueadero privado','Guianza turística',
+    'Spa y masajes','Piscina','Parqueadero privado','Guianza turistica',
     'Alquiler de bicicletas','Noche de karaoke','Fogata nocturna','Avistamiento de aves'
   );
   TYPE t_precios IS TABLE OF NUMBER;
@@ -325,7 +325,7 @@ END;
 /
 
 -- ---------------------------------------------------------------------
--- 8. USUARIO_SISTEMA — usuarios de ejemplo para los 4 roles de la Entrega 3
+-- 8. USUARIO_SISTEMA - usuarios de ejemplo para los 4 roles de la Entrega 3
 -- ---------------------------------------------------------------------
 INSERT INTO usuario_sistema (username, password_hash, rol, id_alojamiento)
   VALUES ('recepcion.arm1', STANDARD_HASH('Clave_2026#1','SHA256'), 'RECEPCION', 1);
@@ -343,7 +343,7 @@ INSERT INTO usuario_sistema (username, password_hash, rol, id_alojamiento)
 COMMIT;
 
 -- ---------------------------------------------------------------------
--- Verificación rápida de volumen
+-- Verificacion rapida de volumen
 -- ---------------------------------------------------------------------
 SELECT 'municipio' tabla, COUNT(*) filas FROM municipio
 UNION ALL SELECT 'tipo_alojamiento', COUNT(*) FROM tipo_alojamiento

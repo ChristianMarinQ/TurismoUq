@@ -1,14 +1,14 @@
 -- =====================================================================
--- SESIÓN A — experimento SIN bloqueo (paso 2 de 3)
+-- SESION A - experimento SIN bloqueo (paso 2 de 3)
 -- Antes de esto, corre 02_elegir_habitacion.sql (checkin=2026-09-15,
 -- checkout=2026-09-18) y anota un ID_HABITACION del resultado.
 --
--- Ábrelo en una PRIMERA pestaña de SQL Developer conectada a TurismoUQ.
--- Al ejecutar (F5) te va a pedir "id_habitacion": pega el número que
--- anotaste. NO esperes a ver ningún mensaje de esta sesión — apenas le
--- des Aceptar al cuadro, cambia de inmediato a la Sesión B y córrela
--- también (tienes 30 segundos de margen, corriendo por detrás en el
--- servidor aunque esta pantalla no muestre nada todavía).
+-- Abrelo en una PRIMERA pestana de SQL Developer conectada a TurismoUQ.
+-- Al ejecutar (F5) te va a pedir "id_habitacion": pega el numero que
+-- anotaste. NO esperes a ver ningun mensaje de esta sesion - apenas le
+-- des Aceptar al cuadro, cambia de inmediato a la Sesion B y correla
+-- tambien (tienes 30 segundos de margen, corriendo por detras en el
+-- servidor aunque esta pantalla no muestre nada todavia).
 -- =====================================================================
 
 SET SERVEROUTPUT ON;

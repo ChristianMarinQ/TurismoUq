@@ -1,6 +1,6 @@
 -- =====================================================================
--- TurismoUQ — 02_pruebas_transacciones.sql (Entrega 3 · Transacciones)
--- Demo para sustentación: pago exitoso vs. pago insuficiente (rollback parcial).
+-- TurismoUQ - 02_pruebas_transacciones.sql (Entrega 3 - Transacciones)
+-- Demo para sustentacion: pago exitoso vs. pago insuficiente (rollback parcial).
 -- Ejecutar conectado como: turismouq@//localhost:1521/XEPDB1
 -- =====================================================================
 
@@ -77,14 +77,14 @@ BEGIN
   SELECT id_cliente INTO v_id_cliente FROM (SELECT id_cliente FROM cliente ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM = 1;
 
   v_total := pkg_reservas.fn_valor_estadia(v_id_hab, v_checkin, v_checkout);
-  DBMS_OUTPUT.PUT_LINE('Valor total real de la estadía: ' || v_total || ' — se va a pagar solo la mitad a propósito.');
+  DBMS_OUTPUT.PUT_LINE('Valor total real de la estadia: ' || v_total || ' - se va a pagar solo la mitad a proposito.');
 
   pkg_transacciones.sp_registrar_reserva_pago(
     p_id_cliente   => v_id_cliente,
     p_checkin      => v_checkin,
     p_checkout     => v_checkout,
     p_habitaciones => ty_tab_habitaciones(ty_item_habitacion(v_id_hab, 1)),
-    p_monto_pago   => ROUND(v_total / 2),  -- monto insuficiente a propósito
+    p_monto_pago   => ROUND(v_total / 2),  -- monto insuficiente a proposito
     p_metodo_pago  => 'WOMPI',
     p_id_reserva   => v_id_reserva,
     p_pago_exitoso => v_pago_exitoso
@@ -95,10 +95,10 @@ BEGIN
 END;
 /
 
--- La reserva SÍ debe aparecer (el INSERT de la reserva es anterior al SAVEPOINT)
+-- La reserva SI debe aparecer (el INSERT de la reserva es anterior al SAVEPOINT)
 SELECT id_reserva, estado, valor_total FROM reserva
 WHERE id_reserva = (SELECT MAX(id_reserva) FROM reserva);
 
--- No debe existir ningún pago para esa reserva (el INSERT de pago se deshizo)
+-- No debe existir ningun pago para esa reserva (el INSERT de pago se deshizo)
 SELECT COUNT(*) AS pagos_para_esa_reserva FROM pago
 WHERE id_reserva = (SELECT MAX(id_reserva) FROM reserva);

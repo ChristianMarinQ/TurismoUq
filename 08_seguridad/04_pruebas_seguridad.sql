@@ -1,28 +1,28 @@
 -- =====================================================================
--- TurismoUQ — 04_pruebas_seguridad.sql (Entrega 3 · Seguridad)
--- Demo para sustentación: se conecta como cada usuario de prueba y se
--- comprueba qué puede y qué NO puede hacer. Los errores marcados como
+-- TurismoUQ - 04_pruebas_seguridad.sql (Entrega 3 - Seguridad)
+-- Demo para sustentacion: se conecta como cada usuario de prueba y se
+-- comprueba que puede y que NO puede hacer. Los errores marcados como
 -- "debe fallar" son el resultado ESPERADO (prueban que el permiso no
--- se concedió), no un bug.
+-- se concedio), no un bug.
 -- Correr como un solo script (usa CONNECT para cambiar de usuario).
 -- =====================================================================
 
 SET SERVEROUTPUT ON;
 
 PROMPT ===================================================
-PROMPT ROL_RECEPCION — solo vistas + el paquete pkg_reservas
+PROMPT ROL_RECEPCION - solo vistas + el paquete pkg_reservas
 PROMPT ===================================================
 CONNECT demo_recepcion/&&clave_demo_recepcion@//localhost:1521/XEPDB1
 
 -- Debe FUNCIONAR: accede por vista.
 SELECT * FROM v_disponibilidad_habitaciones FETCH FIRST 3 ROWS ONLY;
 
--- Debe FALLAR con ORA-00942 (tabla o vista no existe): no tiene ningún
+-- Debe FALLAR con ORA-00942 (tabla o vista no existe): no tiene ningun
 -- privilegio directo sobre la tabla RESERVA, solo sobre las vistas.
 SELECT * FROM reserva FETCH FIRST 3 ROWS ONLY;
 
--- Debe FUNCIONAR: crear una reserva a través del paquete (que corre con
--- los privilegios de turismouq, su dueño) sí está permitido.
+-- Debe FUNCIONAR: crear una reserva a traves del paquete (que corre con
+-- los privilegios de turismouq, su dueno) si esta permitido.
 DECLARE
   v_id_hab NUMBER;
   v_id_cliente NUMBER;
@@ -39,16 +39,16 @@ BEGIN
     p_habitaciones => ty_tab_habitaciones(ty_item_habitacion(v_id_hab, 1)),
     p_id_reserva   => v_id_reserva
   );
-  DBMS_OUTPUT.PUT_LINE('Recepción creó la reserva ' || v_id_reserva || ' sin tocar tablas directamente.');
+  DBMS_OUTPUT.PUT_LINE('Recepcion creo la reserva ' || v_id_reserva || ' sin tocar tablas directamente.');
 END;
 /
 
 PROMPT ===================================================
-PROMPT ROL_ADMIN_ALOJAMIENTO — catálogo de su alojamiento
+PROMPT ROL_ADMIN_ALOJAMIENTO - catalogo de su alojamiento
 PROMPT ===================================================
 CONNECT demo_admin_alojamiento/&&clave_demo_admin_alojamiento@//localhost:1521/XEPDB1
 
--- Debe FUNCIONAR: gestiona el catálogo operativo.
+-- Debe FUNCIONAR: gestiona el catalogo operativo.
 UPDATE habitacion SET estado = 'MANTENIMIENTO' WHERE id_habitacion = (SELECT MIN(id_habitacion) FROM habitacion);
 ROLLBACK; -- solo era para probar el permiso, no dejamos el cambio
 
@@ -56,7 +56,7 @@ ROLLBACK; -- solo era para probar el permiso, no dejamos el cambio
 SELECT * FROM pago FETCH FIRST 3 ROWS ONLY;
 
 PROMPT ===================================================
-PROMPT ROL_GERENTE — lectura amplia, sin escritura
+PROMPT ROL_GERENTE - lectura amplia, sin escritura
 PROMPT ===================================================
 CONNECT demo_gerente/&&clave_demo_gerente@//localhost:1521/XEPDB1
 
@@ -67,7 +67,7 @@ SELECT COUNT(*) FROM pago;
 UPDATE alojamiento SET estado = 'INACTIVO' WHERE id_alojamiento = 1;
 
 PROMPT ===================================================
-PROMPT ROL_AUDITOR — lectura total, incluida seguridad/auditoría
+PROMPT ROL_AUDITOR - lectura total, incluida seguridad/auditoria
 PROMPT ===================================================
 CONNECT demo_auditor/&&clave_demo_auditor@//localhost:1521/XEPDB1
 

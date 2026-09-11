@@ -1,5 +1,5 @@
 -- =====================================================================
--- TurismoUQ — 01_consultas.sql — Entrega 1, sección 5 (8 consultas obligatorias)
+-- TurismoUQ - 01_consultas.sql - Entrega 1, seccion 5 (8 consultas obligatorias)
 -- Ejecutar conectado como: turismouq@//localhost:1521/XEPDB1
 -- Requiere haber corrido antes todo 01_ddl/ y 02_carga_datos/.
 -- =====================================================================
@@ -8,8 +8,8 @@ SET LINESIZE 200;
 SET PAGESIZE 50;
 
 -- =====================================================================
--- 1. Ocupación por municipio y mes (2025) — con PIVOT
---    Métrica: habitaciones-noche vendidas, asignadas al mes de checkin.
+-- 1. Ocupacion por municipio y mes (2025) - con PIVOT
+--    Metrica: habitaciones-noche vendidas, asignadas al mes de checkin.
 -- =====================================================================
 SELECT *
 FROM (
@@ -32,8 +32,8 @@ PIVOT (
 ORDER BY municipio;
 
 -- =====================================================================
--- 2. Ingresos por municipio, tipo de alojamiento y temporada — ROLLUP + GROUPING
---    Ingreso = suma de valor_estadia de cada línea reservada (RESERVA_HABITACION).
+-- 2. Ingresos por municipio, tipo de alojamiento y temporada - ROLLUP + GROUPING
+--    Ingreso = suma de valor_estadia de cada linea reservada (RESERVA_HABITACION).
 --    La temporada se asigna por la fecha de checkin de la reserva.
 -- =====================================================================
 SELECT
@@ -56,7 +56,7 @@ GROUP BY ROLLUP(m.nombre, ta.nombre, t.tipo)
 ORDER BY g_municipio, municipio, g_tipo_alojamiento, tipo_alojamiento, g_temporada, tipo_temporada;
 
 -- =====================================================================
--- 3. Top 3 alojamientos de mayor ingreso dentro de cada municipio — RANK() PARTITION BY
+-- 3. Top 3 alojamientos de mayor ingreso dentro de cada municipio - RANK() PARTITION BY
 -- =====================================================================
 SELECT municipio, alojamiento, ingresos, ranking
 FROM (
@@ -75,7 +75,7 @@ WHERE ranking <= 3
 ORDER BY municipio, ranking;
 
 -- =====================================================================
--- 4. Variación de ingresos mes contra mes — LAG
+-- 4. Variacion de ingresos mes contra mes - LAG
 -- =====================================================================
 SELECT anio, mes, ingresos,
        LAG(ingresos) OVER (ORDER BY anio, mes) AS ingresos_mes_anterior,
@@ -116,7 +116,7 @@ WHERE r.fecha_checkin >= TO_DATE(:p_fecha_ini, 'YYYY-MM-DD')
 ORDER BY r.fecha_checkin;
 
 -- =====================================================================
--- 6. Vista materializada de ocupación mensual + política de refresco
+-- 6. Vista materializada de ocupacion mensual + politica de refresco
 -- =====================================================================
 -- Permite volver a correr este script sobre una BD donde la vista ya
 -- exista (CREATE MATERIALIZED VIEW no admite OR REPLACE en Oracle).
@@ -148,17 +148,17 @@ JOIN municipio m ON m.id_municipio = a.id_municipio
 WHERE r.estado <> 'CANCELADA'
 GROUP BY m.id_municipio, m.nombre, EXTRACT(YEAR FROM r.fecha_checkin), EXTRACT(MONTH FROM r.fecha_checkin);
 
--- Política de refresco: COMPLETE + ON DEMAND (no ON COMMIT, no FAST), programado
--- una vez al día vía DBMS_SCHEDULER. Justificación:
---  - La vista agrega 4 tablas con SUM/COUNT; un refresco FAST exigiría materialized
+-- Politica de refresco: COMPLETE + ON DEMAND (no ON COMMIT, no FAST), programado
+-- una vez al dia via DBMS_SCHEDULER. Justificacion:
+--  - La vista agrega 4 tablas con SUM/COUNT; un refresco FAST exigiria materialized
 --    view logs sobre RESERVA, RESERVA_HABITACION, HABITACION y ALOJAMIENTO, lo que
---    añade overhead a cada INSERT/UPDATE transaccional (justo las tablas con más
+--    anade overhead a cada INSERT/UPDATE transaccional (justo las tablas con mas
 --    escrituras del sistema).
---  - ON COMMIT recalcularía la vista en cada una de las ~25.000 reservas de la carga
---    masiva (o de cada reserva nueva en producción), inaceptable para un reporte
---    gerencial que se consulta como mucho un par de veces al día.
---  - Un refresco nocturno (baja demanda del sistema) es suficiente: la ocupación de
---    "ayer" no cambia y los gerentes revisan el reporte en la mañana.
+--  - ON COMMIT recalcularia la vista en cada una de las ~25.000 reservas de la carga
+--    masiva (o de cada reserva nueva en produccion), inaceptable para un reporte
+--    gerencial que se consulta como mucho un par de veces al dia.
+--  - Un refresco nocturno (baja demanda del sistema) es suficiente: la ocupacion de
+--    "ayer" no cambia y los gerentes revisan el reporte en la manana.
 -- Requiere GRANT CREATE JOB TO turismouq; (una sola vez, conectado como
 -- system/sysdba). Es seguro volver a correr este bloque: si el job ya
 -- existe, se elimina primero.
@@ -187,7 +187,7 @@ END;
 SELECT * FROM mv_ocupacion_mensual ORDER BY municipio, anio, mes;
 
 -- =====================================================================
--- 7. UNPIVOT — reservas por estado y municipio (de columnas a filas)
+-- 7. UNPIVOT - reservas por estado y municipio (de columnas a filas)
 -- =====================================================================
 WITH resumen AS (
   SELECT m.nombre AS municipio,
@@ -216,9 +216,9 @@ ORDER BY municipio, estado;
 
 -- =====================================================================
 -- 8. Pregunta de negocio propuesta por el equipo:
---    ¿Los clientes recurrentes (2+ reservas) dejan un ticket promedio más alto
---    que los clientes de una sola reserva, y en qué tipo de alojamiento se nota más?
---    (Sirve para decidir dónde invertir en fidelización.)
+--    Los clientes recurrentes (2+ reservas) dejan un ticket promedio mas alto
+--    que los clientes de una sola reserva, y en que tipo de alojamiento se nota mas?
+--    (Sirve para decidir donde invertir en fidelizacion.)
 -- =====================================================================
 WITH reserva_base AS (
   SELECT r.id_reserva, r.id_cliente, r.valor_total,
