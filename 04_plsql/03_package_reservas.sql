@@ -23,6 +23,10 @@ CREATE OR REPLACE PACKAGE pkg_reservas AS
   --   -20002  habitacion no disponible en esas fechas (solapamiento)
   --   -20003  capacidad de la habitacion excedida
   --   -20004  no se indico ninguna habitacion
+  --   -20006  hay noches sin tarifa publicada en el rango pedido
+  --   -20007  la habitacion no existe, esta fuera de servicio o su
+  --           alojamiento esta inactivo
+  --   -20008  el checkin es anterior a hoy
   PROCEDURE sp_crear_reserva(
     p_id_cliente    IN  NUMBER,
     p_checkin       IN  DATE,
@@ -74,8 +78,19 @@ CREATE OR REPLACE PACKAGE BODY pkg_reservas AS
     p_id_reserva    OUT NUMBER
   )
   IS
+    -- Indexada por id_habitacion: elimina ids repetidos y, al recorrerla con
+    -- FIRST/NEXT, entrega siempre los ids en orden ascendente. Bloquear
+    -- siempre en el mismo orden evita un abrazo mortal (deadlock) entre dos
+    -- reservas que pidan las mismas habitaciones en orden distinto.
+    TYPE t_ids IS TABLE OF PLS_INTEGER INDEX BY PLS_INTEGER;
+    v_ids         t_ids;
+    v_id          PLS_INTEGER;
+
     v_capacidad   NUMBER;
+    v_estado_hab  habitacion.estado%TYPE;
+    v_estado_aloj alojamiento.estado%TYPE;
     v_conflictos  NUMBER;
+    v_noches_con_tarifa NUMBER;
     v_valor       NUMBER;
     v_total       NUMBER := 0;
   BEGIN
@@ -83,9 +98,52 @@ CREATE OR REPLACE PACKAGE BODY pkg_reservas AS
       RAISE_APPLICATION_ERROR(-20001, 'La fecha de checkout debe ser posterior a la de checkin.');
     END IF;
 
+    -- Una reserva con checkin en el pasado no corresponde a ninguna estadia
+    -- real: ademas de no tener sentido, bloquearia la habitacion en fechas
+    -- que ya pasaron y ensuciaria los reportes de ocupacion.
+    IF p_checkin < TRUNC(SYSDATE) THEN
+      RAISE_APPLICATION_ERROR(-20008, 'No se puede reservar con una fecha de llegada anterior a hoy.');
+    END IF;
+
     IF p_habitaciones IS NULL OR p_habitaciones.COUNT = 0 THEN
       RAISE_APPLICATION_ERROR(-20004, 'La reserva debe incluir al menos una habitacion.');
     END IF;
+
+    -- Fase 0: bloquear las habitaciones pedidas ANTES de comprobar nada.
+    --
+    -- Sin este bloqueo, dos peticiones simultaneas para la misma habitacion
+    -- contaban cero conflictos a la vez (ninguna ve las filas que la otra
+    -- todavia no ha confirmado) y las dos insertaban: doble reserva. El
+    -- trigger trg_no_solape_reserva tampoco lo impide, porque lee la tabla
+    -- con la misma limitacion. Con FOR UPDATE, la segunda sesion espera a
+    -- que la primera termine y entonces si ve su reserva.
+    FOR i IN 1..p_habitaciones.COUNT LOOP
+      v_ids(p_habitaciones(i).id_habitacion) := 1;
+    END LOOP;
+
+    v_id := v_ids.FIRST;
+    WHILE v_id IS NOT NULL LOOP
+      BEGIN
+        SELECT h.estado, a.estado
+          INTO v_estado_hab, v_estado_aloj
+          FROM habitacion h
+          JOIN alojamiento a ON a.id_alojamiento = h.id_alojamiento
+         WHERE h.id_habitacion = v_id
+           FOR UPDATE OF h.estado;
+      EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+          RAISE_APPLICATION_ERROR(-20007, 'La habitacion ' || v_id || ' no existe o no esta disponible.');
+      END;
+
+      -- El catalogo publico ya oculta lo que no esta operativo, pero quien
+      -- llame al paquete directamente (o a la API con un id a mano) podria
+      -- reservar una habitacion en mantenimiento o de un alojamiento cerrado.
+      IF v_estado_hab <> 'DISPONIBLE' OR v_estado_aloj <> 'ACTIVO' THEN
+        RAISE_APPLICATION_ERROR(-20007, 'La habitacion ' || v_id || ' no existe o no esta disponible.');
+      END IF;
+
+      v_id := v_ids.NEXT(v_id);
+    END LOOP;
 
     -- Fase 1: validar TODAS las habitaciones antes de escribir nada,
     -- para no dejar una reserva a medias si alguna falla.
@@ -114,6 +172,27 @@ CREATE OR REPLACE PACKAGE BODY pkg_reservas AS
           'La habitacion ' || p_habitaciones(i).id_habitacion ||
           ' no esta disponible entre ' || TO_CHAR(p_checkin, 'YYYY-MM-DD') ||
           ' y ' || TO_CHAR(p_checkout, 'YYYY-MM-DD') || '.');
+      END IF;
+
+      -- fn_valor_estadia solo suma las noches que caen dentro de una
+      -- temporada CON tarifa cargada para esa habitacion: las demas valian
+      -- cero. Una estadia que se saliera del calendario cargado se cobraba
+      -- incompleta (o gratis), y el cliente pagaba de menos por una reserva
+      -- perfectamente valida. Aqui se exige que TODAS las noches tengan
+      -- tarifa; si falta alguna, la reserva se rechaza en vez de regalarla.
+      SELECT NVL(SUM(LEAST(p_checkout, t.fecha_fin + 1) - GREATEST(p_checkin, t.fecha_inicio)), 0)
+        INTO v_noches_con_tarifa
+        FROM temporada t
+        JOIN tarifa tar ON tar.id_temporada = t.id_temporada
+                       AND tar.id_habitacion = p_habitaciones(i).id_habitacion
+       WHERE t.fecha_inicio < p_checkout
+         AND t.fecha_fin   >= p_checkin;
+
+      IF v_noches_con_tarifa < (p_checkout - p_checkin) THEN
+        RAISE_APPLICATION_ERROR(-20006,
+          'La habitacion ' || p_habitaciones(i).id_habitacion ||
+          ' no tiene tarifa publicada para todas las noches entre ' ||
+          TO_CHAR(p_checkin, 'YYYY-MM-DD') || ' y ' || TO_CHAR(p_checkout, 'YYYY-MM-DD') || '.');
       END IF;
     END LOOP;
 
