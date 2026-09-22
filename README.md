@@ -29,6 +29,7 @@ sqlplus turismouq@//localhost:1521/XEPDB1 @01_ddl/02_tablas.sql
 sqlplus turismouq@//localhost:1521/XEPDB1 @02_carga_datos/01_datos_maestros.sql
 sqlplus turismouq@//localhost:1521/XEPDB1 @02_carga_datos/02_clientes_reservas.sql
 sqlplus turismouq@//localhost:1521/XEPDB1 @03_consultas_analisis/01_consultas.sql
+sqlplus turismouq@//localhost:1521/XEPDB1 @03_consultas_analisis/02_consultas_group_by.sql
 
 # 3) Entrega 2 — capa PL/SQL (requiere GRANT CREATE JOB TO turismouq; ya dado en la Entrega 1)
 sqlplus turismouq@//localhost:1521/XEPDB1 @04_plsql/01_tipos.sql
@@ -79,7 +80,8 @@ TurismoUQ/
 │   ├── 01_datos_maestros.sql    # Municipios, tipos, alojamientos, habitaciones, temporadas, tarifas, servicios, usuarios
 │   └── 02_clientes_reservas.sql # 3.000 clientes, 25.000 reservas, pagos, servicios, reseñas
 ├── 03_consultas_analisis/
-│   └── 01_consultas.sql         # Las 8 consultas obligatorias de la Entrega 1
+│   ├── 01_consultas.sql         # Las 8 consultas obligatorias de la Entrega 1
+│   └── 02_consultas_group_by.sql # 10 consultas de agregación con GROUP BY, HAVING y funciones COUNT/SUM/AVG/MIN/MAX
 ├── 04_plsql/
 │   ├── 01_tipos.sql             # Tipos SQL para pasar listas de habitaciones a sp_crear_reserva
 │   ├── 02_tabla_auditoria.sql   # Tabla donde el trigger de auditoría registra cambios de TARIFA
